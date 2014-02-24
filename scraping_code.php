@@ -6,7 +6,7 @@ class Scraping_Code {
 	private $_subject = '';
 	private $_specified_subject = '';
 	private $_specified_match_result = false;
-    private $_current_except_properties = array();
+	private $_current_except_properties = array();
 	
 	/*  Main  */
 	
@@ -40,95 +40,95 @@ class Scraping_Code {
 	
 	/*  Subject  */
 	
-    public function stripLineBreak($replacement='') {
+	public function stripLineBreak($replacement='') {
 
-    	$targets = array("\n", "\t", "\r", "\0");
-        $this->_subject = str_replace($targets, $replacement, $this->_subject);
+		$targets = array("\n", "\t", "\r", "\0");
+		$this->_subject = str_replace($targets, $replacement, $this->_subject);
 
-    }
-    
-    public function stripSpace($replacement='') {
+	}
+	
+	public function stripSpace($replacement='') {
 
-        $subject = mb_convert_kana($this->_subject, 's');
-        $this->_subject = str_replace(' ', $replacement, $this->_subject);
+		$subject = mb_convert_kana($this->_subject, 's');
+		$this->_subject = str_replace(' ', $replacement, $this->_subject);
 
-    }
-    
-    public function stripSpaceInTag() {
+	}
+	
+	public function stripSpaceInTag() {
 
-    	$pattern = '|>[^<]+<|';
-    	$callback = array($this, 'stripAllSpaceInTagCallback');
-        $this->_subject = preg_replace_callback($pattern, $callback, $this->_subject);
+		$pattern = '|>[^<]+<|';
+		$callback = array($this, 'stripAllSpaceInTagCallback');
+		$this->_subject = preg_replace_callback($pattern, $callback, $this->_subject);
 
-    }
-    
-    private function stripAllSpaceInTagCallback($matches) {
-    	
-    	$value = $matches[0];
-    	$value = preg_replace('|^>[\s]+|', '>', $value);
-    	return preg_replace('|[\s]+<$|', '<', $value);
-    	
-    }
+	}
+	
+	private function stripAllSpaceInTagCallback($matches) {
+		
+		$value = $matches[0];
+		$value = preg_replace('|^>[\s]+|', '>', $value);
+		return preg_replace('|[\s]+<$|', '<', $value);
+		
+	}
 
-    public function stripTag($tags) {
+	public function stripTag($tags) {
 
-        $tags = implode('|', $tags);
-        $pattern = '!</?('. $tags .')\s[^>]*>!i';
-        $this->_subject = preg_replace($pattern, '', $this->_subject);
+		$tags = implode('|', $tags);
+		$pattern = '!</?('. $tags .')\s[^>]*>!i';
+		$this->_subject = preg_replace($pattern, '', $this->_subject);
 
-    }
+	}
 
-    public function stripTagPropertiy($tags) {
+	public function stripTagPropertiy($tags) {
 
-        $tags = implode('|', $tags);
-        $pattern = '!<('. $tags .')\s[^>]*>!i';
-        $this->_subject = preg_replace($pattern, '<$1>', $this->_subject);
+		$tags = implode('|', $tags);
+		$pattern = '!<('. $tags .')\s[^>]*>!i';
+		$this->_subject = preg_replace($pattern, '<$1>', $this->_subject);
 
-    }
-    
-    public function stripTagPropertiyExcept($tag_data) {
-    	
-    	$callback = array($this, 'stripTagPropertiyExceptCallback');
-    	
-    	foreach ($tag_data as $tag_name => $properties) {
+	}
+	
+	public function stripTagPropertiyExcept($tag_data) {
+		
+		$callback = array($this, 'stripTagPropertiyExceptCallback');
+		
+		foreach ($tag_data as $tag_name => $properties) {
 
-    		$this->_current_except_properties = $properties;
-    		$pattern = '|<('. $tag_name .')\s([^>]+)>|i';
-    		$this->_subject = preg_replace_callback($pattern, $callback, $this->_subject);
-    		
-    	}
+			$this->_current_except_properties = $properties;
+			$pattern = '|<('. $tag_name .')\s([^>]+)>|i';
+			$this->_subject = preg_replace_callback($pattern, $callback, $this->_subject);
+			
+		}
 
-    }
-    
-    public function stripTagPropertiyExceptCallback($matches) {
+	}
+	
+	public function stripTagPropertiyExceptCallback($matches) {
 
-    	$except_properties = array();
-    	
-    	if(preg_match_all('|(([^\s=]+)=[\"\']?.*?[\"\']?)[\s>]+|', $matches[0], $matches_2)) {
-    		
-    		$matches_2_count = count($matches_2[0]);
-    		
-    		for ($i = 0; $i < $matches_2_count; $i++) {
-    			
-    			$property_name = $matches_2[2][$i];
-    			
-    			if(in_array($property_name, $this->_current_except_properties)) {
-    			
-    				$except_properties[] = $matches_2[1][$i];
-    				
-    			}
-    			
-    		}
-    		
-    	}
-    	
-    	$property = (count($except_properties) > 0) ? ' '. implode(' ', $except_properties) : '';
-    	return '<'. $matches[1] . $property .'>';
-    	
-    }
-    
-    /*  Specified Match  */
-    
+		$except_properties = array();
+		
+		if(preg_match_all('|(([^\s=]+)=[\"\']?.*?[\"\']?)[\s>]+|', $matches[0], $matches_2)) {
+			
+			$matches_2_count = count($matches_2[0]);
+			
+			for ($i = 0; $i < $matches_2_count; $i++) {
+				
+				$property_name = $matches_2[2][$i];
+				
+				if(in_array($property_name, $this->_current_except_properties)) {
+				
+					$except_properties[] = $matches_2[1][$i];
+					
+				}
+				
+			}
+			
+		}
+		
+		$property = (count($except_properties) > 0) ? ' '. implode(' ', $except_properties) : '';
+		return '<'. $matches[1] . $property .'>';
+		
+	}
+	
+	/*  Specified Match  */
+	
 	public function specifiedMatch($matches_pattern, $specified_pattern, &$matches) {
 	
 		$matches = $this->_specified_match($matches_pattern, $specified_pattern);
@@ -200,10 +200,20 @@ class Scraping_Code {
 				
 			} else {
 				
-				foreach($comboMatchParam->_key_data as $key_name => $match_index) {
+				foreach($comboMatchParam->_key_data as $key_name => $index_value) {
+					
+					if(is_array($index_value)) {
+
+						$match_index = $index_value[0];
+						$template = $index_value[1];
+						$match_value = $this->getTemplateValue($matches[$match_index], $template);
 						
-					$match_value = $matches[$match_index];
+					} else {
+
+						$match_value = $matches[$index_value];
 						
+					}
+					
 					if($match_value != '') {
 							
 						$combo_matches[$key_name] = $match_value;
@@ -233,6 +243,26 @@ class Scraping_Code {
 		
 	}
 	
+	/*  Others  */
+	
+	public function getTemplateValue($value, $template) {
+		
+		if(is_array($value)) {
+			
+			foreach ($value as $key => $value_part) {
+			
+				$value[$key] = $this->getTemplateValue($value_part, $template);
+				
+			}
+			
+			return $value;
+			
+		}
+		
+		return str_replace('[{value}]', $value, $template);
+		
+	}
+	
 }
 
 class Scraping_Code_Combo_Match_Param {
@@ -257,7 +287,7 @@ class Scraping_Code_Combo_Match_Param {
 	$scraping->setSubject($str);
 	$scraping->stripLineBreak();
 	$scraping->stripSpace();
-	$scraping->stripSpaceIntag();						// e.g.) <p>    String1 String2       </p> => <p>String1 String2</p>
+	$scraping->stripSpaceIntag();						// e.g.) <p>	String1 String2	   </p> => <p>String1 String2</p>
 	$scraping->stripTag(array('br', 'div', 'p'));
 	$scraping->stripTagPropertiy(array('dd', 'div'));	// e.g.) <div class="class" id="id"> => <div>
 	$scraping->stripTagPropertiyExcept(array(			// e.g.) <img src="***" style="***" class="***" id="***"> => <img src="***"> ...
@@ -288,25 +318,30 @@ class Scraping_Code_Combo_Match_Param {
 	
 	// Combo Matches
 	
-    $combo_match_params = array(
-    		
-    	$scraping->comboMatchParam('|<title>([^<]+)</title>|', array(
-    			
-    		'name' => 1
-    			
-    	)),
-    	$scraping->comboMatchAllParam('|<div class="([^"]+)">([^<]+)</div>|', array(
-    			
-    		'profile' => 2
-    			
-    	))
-    		
-    );
-    
-    if($scraping->comboMatch($combo_match_params, true, $matches)) {
-    	
-    	print_r($matches);
-    	
-    }
+	$combo_match_params = array(
+			
+		$scraping->comboMatchParam('|<title>([^<]+)</title>|', array(
+				
+			'name' => 1
+				
+		)),
+		$scraping->comboMatchAllParam('|<div class="([^"]+)">([^<]+)</div>|', array(
+				
+			'profile' => 2
+				
+		)),
+		$scraping->comboMatchAllParam('|<img src="([^<]+)">|', array(
+				
+			'images' => array(1, 'http://example.com/images[{value}]')		// 1st arg => index, 2nd => template
+				
+		))
+			
+	);
+	
+	if($scraping->comboMatch($combo_match_params, true, $matches)) {
+		
+		print_r($matches);
+		
+	}
 
 ***/
