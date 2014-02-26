@@ -104,7 +104,7 @@ class Scraping_Code {
 
 		$except_properties = array();
 		
-		if(preg_match_all('|(([^\s=]+)=[\"\']?.*?[\"\']?)[\s>]+|', $matches[0], $matches_2)) {
+		if(preg_match_all('|(([^\s=]+)=[\"\'].+?[\"\'])[\s>]|', $matches[0], $matches_2)) {
 			
 			$matches_2_count = count($matches_2[0]);
 			
@@ -124,6 +124,20 @@ class Scraping_Code {
 		
 		$property = (count($except_properties) > 0) ? ' '. implode(' ', $except_properties) : '';
 		return '<'. $matches[1] . $property .'>';
+		
+	}
+	
+	/*  Match  */
+	
+	public function match($pattern, &$matches) {
+		
+		return preg_match($pattern, $this->_subject, $matches);
+		
+	}
+	
+	public function matchAll($pattern, &$matches) {
+		
+		return preg_match_all($pattern, $this->_subject, $matches);
 		
 	}
 	
@@ -297,8 +311,22 @@ class Scraping_Code_Combo_Match_Param {
 	
 	echo $scraping->getSubject();
 
+	// Match
 
-	// Matches in a Specified block
+	if($scraping->match('|<title[^>]*>|i', $matches)) {
+	
+		print_r($matches);
+	
+	}
+	
+	if($scraping->matchAll('|<link[^>]*>|i', $matches)) {
+	
+		print_r($matches);
+	
+	}
+
+
+	// Match in a Specified block
 
 	$matches_pattern = '|<dl><dt>([^<]*)</dt><dd>([^<]*)</dd></dl>|';
 	$specified_pattern = '|<ul id="girl_sukkin">(.*?)</ul>|';
