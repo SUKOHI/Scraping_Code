@@ -7,6 +7,7 @@ class Scraping_Code {
 	private $_specified_subject = '';
 	private $_specified_match_result = false;
 	private $_current_except_properties = array();
+	private $_combo_match_count_data = array();
 	
 	/*  Main  */
 	
@@ -20,9 +21,15 @@ class Scraping_Code {
 		
 	}
 
-	public function setSubject($subject) {
+	public function setSubject($subject, $strip_linebreak_flag=true) {
 	
 		$this->_subject = $subject;
+		
+		if($strip_linebreak_flag) {
+			
+			$this->stripLineBreak();
+			
+		}
 	
 	}
 
@@ -127,6 +134,20 @@ class Scraping_Code {
 		
 	}
 	
+	/*  Match  */
+	
+	public function match($pattern, &$matches) {
+		
+		return preg_match($pattern, $this->_subject, $matches);
+		
+	}
+	
+	public function matchAll($pattern, &$matches) {
+		
+		return preg_match_all($pattern, $this->_subject, $matches);
+		
+	}
+	
 	/*  Specified Match  */
 	
 	public function specifiedMatch($matches_pattern, $specified_pattern, &$matches) {
@@ -176,21 +197,21 @@ class Scraping_Code {
 	
 	/*  Combo Matches  */
 	
-	public function comboMatch($comboMatchParams, $full_flag, &$matches) {
+	public function comboMatch($combo_match_params, $full_flag, &$matches) {
 		
-		$combo_matches = array();
+		$combo_matches = $this->_combo_match_count_data = array();
 		
-		foreach ($comboMatchParams as $comboMatchParam) {
+		foreach ($combo_match_params as $comboMatchParam) {
 		
 			$pattern = $comboMatchParam->_pattern;
 			
 			if($comboMatchParam->_match_all_flag) {
 			
-				$result = preg_match_all($pattern, $this->_subject, $matches);
+				$result = preg_match_all($pattern, $this->_subject, $matches_part);
 			
 			} else {
 			
-				$result = preg_match($pattern, $this->_subject, $matches);
+				$result = preg_match($pattern, $this->_subject, $matches_part);
 			
 			}
 			
@@ -206,20 +227,26 @@ class Scraping_Code {
 
 						$match_index = $index_value[0];
 						$template = $index_value[1];
-						$match_value = $this->getTemplateValue($matches[$match_index], $template);
+						$match_value = $this->getTemplateValue($matches_part[$match_index], $template);
 						
 					} else {
 
-						$match_value = $matches[$index_value];
+						$match_value = $matches_part[$index_value];
 						
 					}
 					
-					if($match_value != '') {
-							
-						$combo_matches[$key_name] = $match_value;
-							
-					}
+					$combo_matches[$key_name] = $match_value;
+					
+					if(is_array($match_value)) {
 						
+						$this->_combo_match_count_data[] = count($match_value);
+						
+					} else {
+						
+						$this->_combo_match_count_data[] = -1;
+						
+					}
+					
 				}
 				
 			}
@@ -240,6 +267,12 @@ class Scraping_Code {
 	public function comboMatchAllParam($pattern, $var_data) {
 		
 		return new Scraping_Code_Combo_Match_Param($pattern, $var_data, true);
+		
+	}
+	
+	public function comboMatchIsSuitable() {
+		
+		return (array_count_values($this->_combo_match_count_data) == 1);
 		
 	}
 	
@@ -283,33 +316,47 @@ class Scraping_Code_Combo_Match_Param {
 
 /*** Sample
 
-	$scraping = new Scraping_Code();					// or new Scraping_Code($str);
-	$scraping->setSubject($str);
-	$scraping->stripLineBreak();
-	$scraping->stripSpace();
-	$scraping->stripSpaceIntag();						// e.g.) <p>	String1 String2	   </p> => <p>String1 String2</p>
-	$scraping->stripTag(array('br', 'div', 'p'));
-	$scraping->stripTagPropertiy(array('dd', 'div'));	// e.g.) <div class="class" id="id"> => <div>
-	$scraping->stripTagPropertiyExcept(array(			// e.g.) <img src="***" style="***" class="***" id="***"> => <img src="***"> ...
+	$sc = new Scraping_Code();					// or new Scraping_Code($str);
+	$sc->setSubject($str);
+	$sc->stripLineBreak();
+	$sc->stripSpace();
+	$sc->stripSpaceIntag();						// e.g.) <p>	String1 String2	   </p> => <p>String1 String2</p>
+	$sc->stripTag(array('br', 'div', 'p'));
+	$sc->stripTagPropertiy(array('dd', 'div'));	// e.g.) <div class="class" id="id"> => <div>
+	$sc->stripTagPropertiyExcept(array(			// e.g.) <img src="***" style="***" class="***" id="***"> => <img src="***"> ...
 			'img' => array('src'), 
 			'div' => array('id', 'class')
 	));
 	
-	echo $scraping->getSubject();
+	echo $sc->getSubject();
 
 
-	// Matches in a Specified block
+	// Matches
 
-	$matches_pattern = '|<dl><dt>([^<]*)</dt><dd>([^<]*)</dd></dl>|';
-	$specified_pattern = '|<ul id="girl_sukkin">(.*?)</ul>|';
-	
-	if($scraping->specifiedMatch($matches_pattern, $specified_pattern, $matches)) {
+	if($sc->match($pattern, $matches)) {
 		
 		print_r($matches);
 		
 	}
 	
-	if($scraping->specifiedMatchAll($matches_pattern, $specified_pattern, $matches)) {
+	if($sc->matchAll($pattern, $matches)) {
+		
+		print_r($matches);
+		
+	}
+
+	// Matches in a Specified block
+
+	$matches_pattern = '|<title>([^<]+)</title>|';
+	$specified_pattern = '|<div class="([^"]+)">([^<]+)</div>|';
+	
+	if($sc->specifiedMatch($matches_pattern, $specified_pattern, $matches)) {
+		
+		print_r($matches);
+		
+	}
+	
+	if($sc->specifiedMatchAll($matches_pattern, $specified_pattern, $matches)) {
 		
 		print_r($matches);
 		
@@ -320,17 +367,17 @@ class Scraping_Code_Combo_Match_Param {
 	
 	$combo_match_params = array(
 			
-		$scraping->comboMatchParam('|<title>([^<]+)</title>|', array(
+		$sc->comboMatchParam('|<title>([^<]+)</title>|', array(
 				
 			'name' => 1
 				
 		)),
-		$scraping->comboMatchAllParam('|<div class="([^"]+)">([^<]+)</div>|', array(
+		$sc->comboMatchAllParam('|<div class="([^"]+)">([^<]+)</div>|', array(
 				
 			'profile' => 2
 				
 		)),
-		$scraping->comboMatchAllParam('|<img src="([^<]+)">|', array(
+		$sc->comboMatchAllParam('|<img src="([^<]+)">|', array(
 				
 			'images' => array(1, 'http://example.com/images[{value}]')		// 1st arg => index, 2nd => template
 				
@@ -338,10 +385,17 @@ class Scraping_Code_Combo_Match_Param {
 			
 	);
 	
-	if($scraping->comboMatch($combo_match_params, true, $matches)) {
+	if($sc->comboMatch($combo_match_params, true, $matches)) {
 		
 		print_r($matches);
 		
+	}
+	
+	
+	if($sc->comboMatchIsSuitable()) {	// You can know whether the result counts of comboMatch() is suitable or not.
+	
+		// Something
+	
 	}
 
 ***/
